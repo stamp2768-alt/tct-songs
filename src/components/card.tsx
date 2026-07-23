@@ -20,44 +20,48 @@ export default function Card({ song }: CardProps) {
   useColorScheme();
 
   return (
-    <View style={styles.card}>
-      <Image
-        contentFit="cover"
-        source={song.coverUrl}
-        style={styles.cover}
-        transition={180}
-      />
+    <Link
+      asChild
+      href={{
+        pathname: '/preview',
+        params: {
+          artist: song.artist,
+          track: song.track,
+          coverUrl: song.coverUrl,
+          previewUrl: song.previewUrl,
+        },
+      }}>
+      <Pressable
+        accessibilityHint="Opens the song preview player"
+        accessibilityLabel={`Preview ${song.track} by ${song.artist}`}
+        accessibilityRole="link"
+        hitSlop={4}
+        style={({ pressed }) => [
+          styles.card,
+          pressed && styles.cardPressed,
+        ]}>
+        <Image
+          contentFit="cover"
+          source={song.coverUrl}
+          style={styles.cover}
+          transition={180}
+        />
 
-      <View style={styles.details}>
-        <Text numberOfLines={1} selectable style={styles.track}>
-          {song.track}
-        </Text>
-        <Text numberOfLines={1} selectable style={styles.artist}>
-          {song.artist}
-        </Text>
+        <View style={styles.details}>
+          <Text numberOfLines={1} style={styles.track}>
+            {song.track}
+          </Text>
+          <Text numberOfLines={1} style={styles.artist}>
+            {song.artist}
+          </Text>
 
-        <Link
-          asChild
-          href={{
-            pathname: '/preview',
-            params: {
-              artist: song.artist,
-              track: song.track,
-              coverUrl: song.coverUrl,
-              previewUrl: song.previewUrl,
-            },
-          }}>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-            ]}>
+          <View style={styles.button}>
             <Text style={styles.buttonText}>Play preview</Text>
-          </Pressable>
-        </Link>
-      </View>
-    </View>
+            <Text aria-hidden style={styles.buttonIcon}>›</Text>
+          </View>
+        </View>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -76,6 +80,11 @@ const styles = StyleSheet.create({
     maxWidth: 760,
     padding: 14,
     width: '92%',
+  },
+  cardPressed: {
+    borderColor: colors.primary,
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
   },
   cover: {
     backgroundColor: colors.artworkFallback,
@@ -102,17 +111,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderCurve: 'continuous',
     borderRadius: 10,
+    flexDirection: 'row',
+    gap: 8,
     marginTop: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
   },
   buttonText: {
     color: colors.white,
     fontSize: 14,
     fontWeight: '800',
+  },
+  buttonIcon: {
+    color: colors.white,
+    fontSize: 20,
+    lineHeight: 18,
   },
 });
