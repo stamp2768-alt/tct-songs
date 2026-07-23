@@ -3,16 +3,18 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   Switch,
   Text,
   TextInput,
-  TouchableOpacity,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
 
 import Card, { type Song } from '@/components/card';
+import { colors } from '@/theme/colors';
 
 type ItunesResult = {
   trackId: number;
@@ -28,19 +30,21 @@ type ItunesResponse = {
 };
 
 export default function Index() {
+  useColorScheme();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 620;
   const [data, setData] = useState<Song[]>([]);
   const [count, setCount] = useState(0);
   const [entity, setEntity] = useState(false);
   const [term, setTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const windowWidth = useWindowDimensions().width;
 
   const getData = async () => {
     const searchTerm = term.trim();
 
     if (!searchTerm) {
-      setError('Enter text to search for first.');
+      setError('Enter an artist or song to search.');
       return;
     }
 
@@ -83,115 +87,263 @@ export default function Index() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, { width: windowWidth }]}>
-        Apple iTunes ({count})
-      </Text>
+    <FlatList
+      contentContainerStyle={styles.page}
+      contentInsetAdjustmentBehavior="automatic"
+      data={data}
+      keyExtractor={(item) => item.id.toString()}
+      keyboardShouldPersistTaps="handled"
+      ListHeaderComponent={
+        <View style={styles.headerContent}>
+          <View style={styles.hero}>
+            <Text style={styles.eyebrow}>TCT SONGS</Text>
+            <Text style={styles.heading}>Find your next favorite track</Text>
+            <Text style={styles.subtitle}>
+              Search Apple Music previews by artist or song title.
+            </Text>
+          </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Song:</Text>
-        <TextInput
-          onChangeText={setTerm}
-          onSubmitEditing={getData}
-          placeholder="Artist or song"
-          returnKeyType="search"
-          style={styles.input}
-          value={term}
-        />
-        <Text style={styles.label}>{entity ? 'Video' : 'Audio'}</Text>
-        <Switch
-          onValueChange={setEntity}
-          thumbColor="#4477ff"
-          trackColor={{ false: 'grey', true: '#4477ff' }}
-          value={entity}
-        />
-        <TouchableOpacity
-          accessibilityRole="button"
-          disabled={isLoading}
-          onPress={getData}
-          style={[styles.button, isLoading && styles.buttonDisabled]}>
-          <Text style={styles.buttonText}>Get Data</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.searchPanel}>
+            <Text style={styles.inputLabel}>What do you want to hear?</Text>
+            <View style={[styles.form, isCompact && styles.formCompact]}>
+              <TextInput
+                accessibilityLabel="Artist or song"
+                onChangeText={setTerm}
+                onSubmitEditing={getData}
+                placeholder="Try Adele, Bruno Mars..."
+                placeholderTextColor="#8b91a3"
+                returnKeyType="search"
+                style={styles.input}
+                value={term}
+              />
 
-      {isLoading && <ActivityIndicator color="#4477ff" size="large" />}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+              <View style={styles.mediaToggle}>
+                <View>
+                  <Text style={styles.toggleTitle}>
+                    {entity ? 'Music video' : 'Audio track'}
+                  </Text>
+                  <Text style={styles.toggleHint}>Choose result type</Text>
+                </View>
+                <Switch
+                  accessibilityLabel="Toggle music video results"
+                  onValueChange={setEntity}
+                  thumbColor={colors.white}
+                  trackColor={{ false: '#a8aec0', true: '#7676e8' }}
+                  value={entity}
+                />
+              </View>
 
-      <FlatList
-        contentContainerStyle={styles.results}
-        data={data}
-        keyExtractor={(item) => item.id.toString()}
-        ListEmptyComponent={
-          !isLoading && !error ? (
-            <Text style={styles.empty}>Search results will appear here.</Text>
-          ) : null
-        }
-        renderItem={({ item }) => <Card song={item} />}
-      />
-    </View>
+              <Pressable
+                accessibilityRole="button"
+                disabled={isLoading}
+                onPress={getData}
+                style={({ pressed }) => [
+                  styles.searchButton,
+                  pressed && styles.buttonPressed,
+                  isLoading && styles.buttonDisabled,
+                ]}>
+                {isLoading ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text style={styles.searchButtonText}>Search</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.resultsHeader}>
+            <Text style={styles.resultsTitle}>Results</Text>
+            <Text style={styles.count}>{count} found</Text>
+          </View>
+
+          {error ? (
+            <Text selectable style={styles.error}>
+              {error}
+            </Text>
+          ) : null}
+        </View>
+      }
+      ListEmptyComponent={
+        !isLoading && !error ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>♫</Text>
+            <Text style={styles.emptyTitle}>Ready when you are</Text>
+            <Text style={styles.emptyText}>
+              Enter a search above to discover audio and video previews.
+            </Text>
+          </View>
+        ) : null
+      }
+      renderItem={({ item }) => <Card song={item} />}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    backgroundColor: '#f7f8ff',
-    flex: 1,
+  page: {
+    backgroundColor: colors.background,
+    flexGrow: 1,
+    gap: 12,
+    paddingBottom: 32,
   },
-  title: {
-    backgroundColor: '#6688ff',
-    color: 'white',
-    fontSize: 32,
-    fontWeight: 'bold',
-    paddingVertical: 10,
+  headerContent: {
+    gap: 18,
+  },
+  hero: {
+    alignItems: 'center',
+    backgroundColor: '#29264f',
+    gap: 8,
+    paddingHorizontal: 22,
+    paddingVertical: 36,
+  },
+  eyebrow: {
+    color: '#b9b7ff',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 2.2,
+  },
+  heading: {
+    color: colors.white,
+    fontSize: 30,
+    fontWeight: '800',
     textAlign: 'center',
+  },
+  subtitle: {
+    color: '#d8d7ef',
+    fontSize: 15,
+    lineHeight: 22,
+    maxWidth: 520,
+    textAlign: 'center',
+  },
+  searchPanel: {
+    alignSelf: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.separator,
+    borderCurve: 'continuous',
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: '0 10px 30px rgba(34, 38, 60, 0.10)',
+    gap: 10,
+    maxWidth: 760,
+    padding: 18,
+    width: '92%',
+  },
+  inputLabel: {
+    color: colors.label,
+    fontSize: 15,
+    fontWeight: '700',
   },
   form: {
     alignItems: 'center',
-    alignSelf: 'stretch',
-    backgroundColor: '#ddddff',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    padding: 8,
+    gap: 12,
   },
-  label: {
-    fontWeight: 'bold',
+  formCompact: {
+    alignItems: 'stretch',
+    flexDirection: 'column',
   },
   input: {
-    backgroundColor: 'pink',
-    borderColor: 'gray',
-    borderRadius: 5,
+    backgroundColor: colors.background,
+    borderColor: colors.separator,
+    borderCurve: 'continuous',
+    borderRadius: 12,
     borderWidth: 1,
-    margin: 10,
-    minWidth: 180,
-    padding: 10,
+    color: colors.label,
+    flex: 1,
+    fontSize: 16,
+    minHeight: 48,
+    minWidth: 220,
+    paddingHorizontal: 14,
   },
-  button: {
-    backgroundColor: '#44bb44',
-    borderRadius: 5,
-    margin: 10,
-    padding: 10,
+  mediaToggle: {
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderCurve: 'continuous',
+    borderRadius: 12,
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+    minHeight: 48,
+    paddingHorizontal: 12,
+  },
+  toggleTitle: {
+    color: colors.label,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  toggleHint: {
+    color: colors.secondaryLabel,
+    fontSize: 11,
+  },
+  searchButton: {
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderCurve: 'continuous',
+    borderRadius: 12,
+    justifyContent: 'center',
+    minHeight: 48,
+    minWidth: 108,
+    paddingHorizontal: 20,
+  },
+  searchButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  buttonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.98 }],
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  resultsHeader: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    maxWidth: 760,
+    paddingHorizontal: 4,
+    width: '92%',
   },
-  results: {
-    paddingBottom: 24,
-    width: '100%',
+  resultsTitle: {
+    color: colors.label,
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  count: {
+    color: colors.secondaryLabel,
+    fontSize: 14,
+    fontVariant: ['tabular-nums'],
   },
   error: {
-    color: '#b00020',
-    margin: 12,
+    alignSelf: 'center',
+    color: colors.danger,
+    maxWidth: 760,
+    paddingHorizontal: 18,
     textAlign: 'center',
+    width: '92%',
   },
-  empty: {
-    color: '#555',
-    marginTop: 32,
+  emptyState: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 8,
+    maxWidth: 420,
+    paddingHorizontal: 24,
+    paddingVertical: 38,
+  },
+  emptyIcon: {
+    color: colors.primary,
+    fontSize: 44,
+  },
+  emptyTitle: {
+    color: colors.label,
+    fontSize: 19,
+    fontWeight: '800',
+  },
+  emptyText: {
+    color: colors.secondaryLabel,
+    lineHeight: 21,
     textAlign: 'center',
   },
 });
