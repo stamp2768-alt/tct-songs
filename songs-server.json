@@ -1,3 +1,11 @@
 {
-  "songs": []
+  "songs": [
+    {
+      "id": 1544491998,
+      "artist": "Adele",
+      "track": "Someone Like You",
+      "coverUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/ef/18/7b/ef187b7d-f487-e935-4ca1-af5748313710/mzaf_8455263230305249048.plus.aac.p.m4a"
+    }
+  ]
 }
