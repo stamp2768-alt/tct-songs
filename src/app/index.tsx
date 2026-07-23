@@ -29,6 +29,10 @@ type ItunesResponse = {
   results: ItunesResult[];
 };
 
+function highResolutionArtwork(url: string) {
+  return url.replace(/\/100x100bb\.(jpg|png)$/, '/600x600bb.$1');
+}
+
 export default function Index() {
   useColorScheme();
   const { width } = useWindowDimensions();
@@ -69,7 +73,7 @@ export default function Index() {
         id: item.trackId,
         artist: item.artistName,
         track: item.trackName,
-        coverUrl: item.artworkUrl100,
+        coverUrl: highResolutionArtwork(item.artworkUrl100),
         previewUrl: item.previewUrl,
       }));
 
